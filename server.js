@@ -6,10 +6,8 @@ const yahooFinance = require("yahoo-finance2").default;
 
 const queryOptions = { lang: "en-US", formatted: false, region: "US" };
 const qrcode = require("qrcode-terminal");
-const { Client, LocalAuth } = require("whatsapp-web.js");
-const client = new Client({
-  authStrategy: new LocalAuth(),
-});
+const { Client } = require("whatsapp-web.js");
+const client = new Client();
 
 client.on("qr", (qr) => {
   qrcode.generate(qr, { small: true });
@@ -20,7 +18,7 @@ client.on("ready", () => {
 
   client.getChats().then((chats) => {
     const GainerGroup = chats.find((chat) => chat.name === "Gainer");
-    client.sendMessage(GainerGroup.id._serialized, "Your boy is liveeee")
+    client.sendMessage(GainerGroup.id._serialized, "Gainer is Live")
 
     setInterval(() => {
       checkStocks()
@@ -31,7 +29,7 @@ client.on("ready", () => {
         .catch((error) => {
           console.error("Error:", error);
         });
-    }, 30000);
+    }, 600000);
   });
 });
 

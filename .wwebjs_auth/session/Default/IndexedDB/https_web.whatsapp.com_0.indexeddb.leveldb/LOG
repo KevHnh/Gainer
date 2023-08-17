@@ -1,3 +1,10 @@
-2023/08/16-22:16:27.023 43e4 Reusing MANIFEST C:\Users\13476\Desktop\gainer\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2023/08/16-22:16:27.024 43e4 Recovering log #72
-2023/08/16-22:16:27.144 43e4 Reusing old log C:\Users\13476\Desktop\gainer\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000072.log 
+2023/08/17-01:02:03.598 54a4 Reusing MANIFEST C:\Users\13476\Desktop\gainer\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/08/17-01:02:03.598 54a4 Recovering log #72
+2023/08/17-01:02:03.764 54a4 Reusing old log C:\Users\13476\Desktop\gainer\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000072.log 
+2023/08/17-01:02:16.337 17a4 Level-0 table #77: started
+2023/08/17-01:02:16.501 17a4 Level-0 table #77: 1191375 bytes OK
+2023/08/17-01:02:16.506 17a4 Delete type=0 #72
+2023/08/17-01:02:16.625 1998 Compacting 1@1 + 1@2 files
+2023/08/17-01:02:16.728 1998 Generated table #78@1: 35846 keys, 1293149 bytes
+2023/08/17-01:02:16.728 1998 Compacted 1@1 + 1@2 files => 1293149 bytes
+2023/08/17-01:02:16.730 1998 compacted to: files[ 0 0 1 0 0 0 0 ]
