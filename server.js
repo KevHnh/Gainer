@@ -1,47 +1,36 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const url = "https://www.etrade.wallst.com/research/Markets/Movers?index=US&type=percentGainers";
-
 const yahooFinance = require("yahoo-finance2").default;
+require("dotenv").config();
 
+const { Client, Events, GatewayIntentBits } = require("discord.js");
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 const queryOptions = { lang: "en-US", formatted: false, region: "US" };
-const qrcode = require("qrcode-terminal");
-const { Client } = require("whatsapp-web.js");
-const client = new Client();
 
-client.on("qr", (qr) => {
-  qrcode.generate(qr, { small: true });
+client.once(Events.ClientReady, (c) => {
+  console.log(`Ready! Logged in as ${c.user.tag}`);
+  let channel = client.channels.cache.get(process.env.CHANNEL)
+
+  setInterval(() => {
+    checkStocks()
+      .then((topGainers) => {
+        topGainers.map((entry) => console.log(`${entry['companyName']} | +${entry['percentageChange']} | OPTIONS AVAILABLE`));
+        topGainers.map((entry) => channel.send(`${entry['companyName']} | +${entry['percentageChange']} | OPTIONS AVAILABLE`))
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }, 10000);
 });
 
-client.on("ready", () => {
-  console.log("Client is ready!");
-
-  client.getChats().then((chats) => {
-    const GainerGroup = chats.find((chat) => chat.name === "Gainer");
-    client.sendMessage(GainerGroup.id._serialized, "Gainer is Live")
-
-    setInterval(() => {
-      checkStocks()
-        .then((topGainers) => {
-          topGainers.map((entry) => console.log(`${entry['companyName']} | +${entry['percentageChange']} | OPTIONS AVAILABLE`));
-          topGainers.map((entry) => client.sendMessage(GainerGroup.id._serialized, `${entry['companyName']} | +${entry['percentageChange']} | OPTIONS AVAILABLE`))
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
-    }, 600000);
-  });
-});
-
-client.on("message", (message) => {
-  console.log(message.body);
-
-  if (message.body === "!ping") {
-    message.reply("pong");
+client.on(Events.MessageCreate, (msg) => {
+  if (msg.content === "hello") {
+    msg.channel.send("hey!");
   }
 });
 
-client.initialize();
+client.login(process.env.TOKEN);
 
 async function checkStocks() {
   try {
