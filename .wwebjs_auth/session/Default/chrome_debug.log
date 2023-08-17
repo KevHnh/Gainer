@@ -1,5 +1,2 @@
-[0816/184332.509:INFO:CONSOLE(43)] "Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Partial response (status code 206) is unsupported", source: https://web.whatsapp.com/serviceworker.js (43)
-[0816/184332.511:INFO:CONSOLE(43)] "Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Partial response (status code 206) is unsupported", source: https://web.whatsapp.com/serviceworker.js (43)
-[0816/184358.379:INFO:CONSOLE(40)] "Uncaught (in promise) TypeError: Invalid value at currentMsg.body: value is invalid", source: https://web.whatsapp.com/app.9bf7959578bdb7663582.js (40)
-[0816/184418.492:INFO:CONSOLE(40)] "Uncaught (in promise) TypeError: Invalid value at currentMsg.body: value is invalid", source: https://web.whatsapp.com/app.9bf7959578bdb7663582.js (40)
-[0816/184437.235:INFO:CONSOLE(40)] "Uncaught (in promise) TypeError: Invalid value at currentMsg.body: value is invalid", source: https://web.whatsapp.com/app.9bf7959578bdb7663582.js (40)
+[0816/221638.241:INFO:CONSOLE(43)] "Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Partial response (status code 206) is unsupported", source: https://web.whatsapp.com/serviceworker.js (43)
+[0816/221638.243:INFO:CONSOLE(43)] "Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Partial response (status code 206) is unsupported", source: https://web.whatsapp.com/serviceworker.js (43)
