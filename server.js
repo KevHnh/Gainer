@@ -21,7 +21,7 @@ client.once(Events.ClientReady, (c) => {
       .catch((error) => {
         console.error("Error:", error);
       });
-  }, 10000);
+  }, 600000);
 });
 
 client.on(Events.MessageCreate, (msg) => {
