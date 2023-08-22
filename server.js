@@ -4,6 +4,18 @@ const url = "https://www.etrade.wallst.com/research/Markets/Movers?index=US&type
 const yahooFinance = require("yahoo-finance2").default;
 require("dotenv").config();
 
+const express = require('express');
+const app = express();
+const port = 3000; 
+
+app.get('/', (req, res) => {
+  res.send('Gainer is operational');
+});
+
+app.listen(port, () => {
+  console.log(`Server is listening at http://localhost:${port}`);
+});
+
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 const queryOptions = { lang: "en-US", formatted: false, region: "US" };
