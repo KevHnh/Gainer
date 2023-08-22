@@ -4,49 +4,49 @@ const url = "https://www.etrade.wallst.com/research/Markets/Movers?index=US&type
 const yahooFinance = require("yahoo-finance2").default;
 require("dotenv").config();
 
-const express = require('express');
+const express = require("express");
 const app = express();
-const port = 3000; 
-
-app.get('/', (req, res) => {
-  res.send('Gainer is operational');
-});
-
-app.listen(port, () => {
-  console.log(`Server is listening at http://localhost:${port}`);
-});
+const port = 3000;
 
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 const queryOptions = { lang: "en-US", formatted: false, region: "US" };
 
-client.once(Events.ClientReady, (c) => {
-  console.log(`Ready! Logged in as ${c.user.tag}`);
-  let channel = client.channels.cache.get(process.env.CHANNEL);
-
-  setInterval(() => {
-    checkStocks()
-      .then((topGainers) => {
-        let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
-
-        if (res) {
-          console.log(res);
-          channel.send(res);
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  }, 10000);
+app.get("/", (req, res) => {
+  res.send("Gainer is operational");
 });
 
-client.on(Events.MessageCreate, (msg) => {
-  if (msg.content === "!status") {
-    msg.reply("Systems Operational");
-  }
-});
+app.listen(port, () => {
+  console.log(`Server is listening at http://localhost:${port}`);
 
-client.login(process.env.TOKEN);
+  client.once(Events.ClientReady, (c) => {
+    console.log(`Ready! Logged in as ${c.user.tag}`);
+    let channel = client.channels.cache.get(process.env.CHANNEL);
+
+    setInterval(() => {
+      checkStocks()
+        .then((topGainers) => {
+          let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
+
+          if (res) {
+            console.log(res);
+            channel.send(res);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }, 3000);
+  });
+
+  client.on(Events.MessageCreate, (msg) => {
+    if (msg.content === "!status") {
+      msg.reply("Systems Operational");
+    }
+  });
+
+  client.login(process.env.TOKEN);
+});
 
 const checkedCompanies = new Map();
 
