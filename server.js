@@ -46,7 +46,7 @@ async function checkStocks() {
     const topGainers = [];
 
     $("table tr").each((index, element) => {
-      if (index <= 90) {
+      if (index <= 5) {
         const columns = $(element).find("td");
         if (columns.length >= 3) {
           const companyName = $(columns[1]).text();
@@ -55,7 +55,7 @@ async function checkStocks() {
             .trim()
             .match(/([0-9]*\.?[0-9]+%)/gm)[0];
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 5 && !checkedCompanies.has(companyName)) {
+          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 90 && !checkedCompanies.has(companyName)) {
             checkedCompanies.set(companyName, true);
             topGainers.push({ companyName, percentageChange });
           }
