@@ -10,27 +10,33 @@ const queryOptions = { lang: "en-US", formatted: false, region: "US" };
 
 client.once(Events.ClientReady, (c) => {
   console.log(`Ready! Logged in as ${c.user.tag}`);
-  let channel = client.channels.cache.get(process.env.CHANNEL)
+  let channel = client.channels.cache.get(process.env.CHANNEL);
 
   setInterval(() => {
     checkStocks()
       .then((topGainers) => {
-        topGainers.map((entry) => console.log(`${entry['companyName']} | +${entry['percentageChange']} | OPTIONS AVAILABLE`));
-        topGainers.map((entry) => channel.send(`${entry['companyName']} | +${entry['percentageChange']} | OPTIONS AVAILABLE`))
+        let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
+
+        if (res) {
+          console.log(res);
+          channel.send(res);
+        }
       })
       .catch((error) => {
         console.error("Error:", error);
       });
-  }, 600000);
+  }, 5000);
 });
 
 client.on(Events.MessageCreate, (msg) => {
-  if (msg.content === "hello") {
-    msg.channel.send("hey!");
+  if (msg.content === "!status") {
+    msg.reply("Systems Operational");
   }
 });
 
 client.login(process.env.TOKEN);
+
+const checkedCompanies = new Map();
 
 async function checkStocks() {
   try {
@@ -38,10 +44,9 @@ async function checkStocks() {
     const html = response.data;
     const $ = cheerio.load(html);
     const topGainers = [];
-    const checkNeeded = [];
 
     $("table tr").each((index, element) => {
-      if (index <= 5) {
+      if (index <= 20) {
         const columns = $(element).find("td");
         if (columns.length >= 3) {
           const companyName = $(columns[1]).text();
@@ -50,25 +55,18 @@ async function checkStocks() {
             .trim()
             .match(/([0-9]*\.?[0-9]+%)/gm)[0];
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 20) {
-            checkNeeded.push({ companyName, percentageChange });
+          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 5 && !checkedCompanies.has(companyName)) {
+            checkedCompanies.set(companyName, true);
+            topGainers.push({ companyName, percentageChange });
           }
         }
       }
     });
 
-    const results = await Promise.all(checkNeeded.map((entry) => checkOptions(entry.companyName)));
+    const results = await Promise.all(topGainers.map((entry) => checkOptions(entry.companyName)));
+    const finalTopGainers = topGainers.filter((_, index) => results[index]);
 
-    results.forEach((result, index) => {
-      if (result) {
-        topGainers.push({
-          companyName: checkNeeded[index].companyName,
-          percentageChange: checkNeeded[index].percentageChange,
-        });
-      }
-    });
-
-    return topGainers;
+    return finalTopGainers;
   } catch (error) {
     console.error("Error fetching data:", error);
     return [];
