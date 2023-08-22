@@ -25,7 +25,7 @@ client.once(Events.ClientReady, (c) => {
       .catch((error) => {
         console.error("Error:", error);
       });
-  }, 5000);
+  }, 10000);
 });
 
 client.on(Events.MessageCreate, (msg) => {
@@ -46,7 +46,7 @@ async function checkStocks() {
     const topGainers = [];
 
     $("table tr").each((index, element) => {
-      if (index <= 20) {
+      if (index <= 90) {
         const columns = $(element).find("td");
         if (columns.length >= 3) {
           const companyName = $(columns[1]).text();
