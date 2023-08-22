@@ -24,6 +24,7 @@ app.listen(port, () => {
     let channel = client.channels.cache.get(process.env.CHANNEL);
 
     setInterval(() => {
+      console.log("CHECKING STOCKS")
       checkStocks()
         .then((topGainers) => {
           let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
@@ -36,7 +37,7 @@ app.listen(port, () => {
         .catch((error) => {
           console.error("Error:", error);
         });
-    }, 3000);
+    }, 780000);
   });
 
   client.on(Events.MessageCreate, (msg) => {
