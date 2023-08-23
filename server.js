@@ -8,6 +8,9 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
+const https = require("https");
+const serverUrl = "https://gainer.onrender.com";
+
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 const queryOptions = { lang: "en-US", formatted: false, region: "US" };
@@ -24,6 +27,14 @@ app.listen(port, () => {
     let channel = client.channels.cache.get(process.env.CHANNEL);
 
     setInterval(() => {
+      https
+        .get(serverUrl, (res) => {
+          console.log(`Ping sent to ${serverUrl}. Status code: ${res.statusCode}`);
+        })
+        .on("error", (err) => {
+          console.error(`Error sending ping to ${serverUrl}: ${err}`);
+        });
+
       checkStocks()
         .then((topGainers) => {
           let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
