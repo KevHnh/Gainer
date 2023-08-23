@@ -1,6 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const url = "https://www.etrade.wallst.com/research/Markets/Movers?index=US&type=percentGainers";
+const url1 = "https://www.etrade.wallst.com/research/Markets/Movers?index=US&type=percentGainers";
+const url2 = "https://www.marketbeat.com/market-data/three-day-gainers/";
 const yahooFinance = require("yahoo-finance2").default;
 require("dotenv").config();
 
@@ -40,8 +41,21 @@ app.listen(port, () => {
           let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
 
           if (res) {
-            console.log(res);
-            channel.send(res);
+            console.log(`Today's Gainers \n` + res);
+            channel.send(`**Today's Gainer(s)** \n` + res);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+
+      checkStocks3day()
+        .then((topGainers) => {
+          let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
+
+          if (res) {
+            console.log(`3 Day Gainers \n` + res);
+            channel.send(`**3 Day Gainer(s)** \n` + res);
           }
         })
         .catch((error) => {
@@ -54,18 +68,42 @@ app.listen(port, () => {
     if (msg.content === "!status") {
       msg.reply("Systems Operational");
     }
+
+    if (msg.content === "!today") {
+      checkStocks("command")
+        .then((stocks) => {
+          let res = stocks.map((entry) => `${entry.companyName} | +${entry.percentageChange} | ${entry.optionable ? "OPTIONS AVAILABLE" : "NO OPTIONS"}`).join("\n");
+          msg.reply(`**Today's Gainers** \n` + res);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+
+    if (msg.content === "!3day") {
+      checkStocks3day("command")
+        .then((stocks) => {
+          let res = stocks.map((entry) => `${entry.companyName} | +${entry.percentageChange} | ${entry.optionable ? "OPTIONS AVAILABLE" : "NO OPTIONS"}`).join("\n");
+          msg.reply(`**3 Day Gainers** \n` + res);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
   });
 
   client.login(process.env.TOKEN);
 });
 
-const checkedCompanies = new Map();
+const checkedCompanies1 = new Map();
+const checkedCompanies2 = new Map();
 
-async function checkStocks() {
+async function checkStocks(mode) {
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url1);
     const html = response.data;
     const $ = cheerio.load(html);
+    const stocks = [];
     const topGainers = [];
 
     $("table tr").each((index, element) => {
@@ -78,13 +116,73 @@ async function checkStocks() {
             .trim()
             .match(/([0-9]*\.?[0-9]+%)/gm)[0];
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 90 && !checkedCompanies.has(companyName)) {
-            checkedCompanies.set(companyName, true);
+          stocks.push({ companyName, percentageChange });
+
+          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 10 && !checkedCompanies1.has(companyName)) {
+            checkedCompanies1.set(companyName, true);
             topGainers.push({ companyName, percentageChange });
           }
         }
       }
     });
+
+    if (mode === "command") {
+      const res = await Promise.all(stocks.map((entry) => checkOptions(entry.companyName)));
+
+      for (let i = 0; i < 5; i++) {
+        stocks[i]["optionable"] = res[i];
+      }
+
+      return stocks;
+    }
+
+    const results = await Promise.all(topGainers.map((entry) => checkOptions(entry.companyName)));
+    const finalTopGainers = topGainers.filter((_, index) => results[index]);
+
+    return finalTopGainers;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return [];
+  }
+}
+
+async function checkStocks3day(mode) {
+  try {
+    const response = await axios.get(url2);
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const stocks = [];
+    const topGainers = [];
+
+    $("table tr").each((index, element) => {
+      if (index <= 5) {
+        const columns = $(element).find("td");
+        if (columns.length >= 3) {
+          const dataClean = $(columns[0]).attr("data-clean");
+          const percentageChange = $(columns[1])
+            .text()
+            .match(/([0-9]*\.?[0-9]+%)/gm)[0];
+          const [companyName, name] = dataClean.split("|");
+
+          stocks.push({ companyName, percentageChange });
+
+          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 10 && !checkedCompanies2.has(companyName)) {
+            checkedCompanies2.set(companyName, true);
+            topGainers.push({ companyName, percentageChange });
+          }
+        }
+      }
+    });
+
+    if (mode === "command") {
+      const res = await Promise.all(stocks.map((entry) => checkOptions(entry.companyName)));
+
+      for (let i = 0; i < 5; i++) {
+        stocks[i]["optionable"] = res[i];
+      }
+
+      return stocks;
+    }
 
     const results = await Promise.all(topGainers.map((entry) => checkOptions(entry.companyName)));
     const finalTopGainers = topGainers.filter((_, index) => results[index]);
