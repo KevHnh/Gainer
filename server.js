@@ -36,7 +36,7 @@ app.listen(port, () => {
         .catch((error) => {
           console.error("Error:", error);
         });
-    }, 3000);
+    }, 600000);
   });
 
   client.on(Events.MessageCreate, (msg) => {
