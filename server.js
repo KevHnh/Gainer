@@ -118,7 +118,7 @@ async function checkStocks(mode) {
 
           stocks.push({ companyName, percentageChange });
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 10 && !checkedCompanies1.has(companyName)) {
+          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 90 && !checkedCompanies1.has(companyName)) {
             checkedCompanies1.set(companyName, true);
             topGainers.push({ companyName, percentageChange });
           }
@@ -166,7 +166,7 @@ async function checkStocks3day(mode) {
 
           stocks.push({ companyName, percentageChange });
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 10 && !checkedCompanies2.has(companyName)) {
+          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 150 && !checkedCompanies2.has(companyName)) {
             checkedCompanies2.set(companyName, true);
             topGainers.push({ companyName, percentageChange });
           }
