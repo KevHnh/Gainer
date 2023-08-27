@@ -1,8 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-const url1 = "https://www.etrade.wallst.com/research/Markets/Movers?index=US&type=percentGainers";
-const url2 = "https://www.marketbeat.com/market-data/three-day-gainers/";
-const yahooFinance = require("yahoo-finance2").default;
+const url1 = "https://finviz.com/screener.ashx?v=152&s=ta_topgainers&f=exch_nasd&o=-change&ar=180&c=0,1,42,80,66";
+const url2 = "https://finviz.com/screener.ashx?v=152&s=ta_topgainers&f=exch_nasd&o=-perf1w&ar=180&c=0,1,42,80,66"
 require("dotenv").config();
 
 const express = require("express");
@@ -14,10 +13,9 @@ const serverUrl = "https://gainer.onrender.com";
 
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
-const queryOptions = { lang: "en-US", formatted: false, region: "US" };
 
 app.get("/", (req, res) => {
-  res.send("Gainer is operational");
+  res.send("Gainer Beta is operational");
 });
 
 app.listen(port, () => {
@@ -36,9 +34,9 @@ app.listen(port, () => {
           console.error(`Error sending ping to ${serverUrl}: ${err}`);
         });
 
-      checkStocks()
+      checkStocksDay()
         .then((topGainers) => {
-          let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
+          let res = topGainers.map((entry) => `${entry.ticker} | +${entry.dayGain}%`).join("\n");
 
           if (res) {
             console.log(`Today's Gainers \n` + res);
@@ -49,13 +47,13 @@ app.listen(port, () => {
           console.error("Error:", error);
         });
 
-      checkStocks3day()
+        checkStocksWeek()
         .then((topGainers) => {
-          let res = topGainers.map((entry) => `${entry.companyName} | +${entry.percentageChange}`).join("\n");
+          let res = topGainers.map((entry) => `${entry.ticker} | +${entry.weekGain}%`).join("\n");
 
           if (res) {
-            console.log(`3 Day Gainers \n` + res);
-            channel.send(`**3 Day Gainer(s)** \n` + res);
+            console.log(`Week's Gainers \n` + res);
+            channel.send(`**Week's Gainer(s)** \n` + res);
           }
         })
         .catch((error) => {
@@ -70,9 +68,9 @@ app.listen(port, () => {
     }
 
     if (msg.content === "!today") {
-      checkStocks("command")
+      checkStocksDay("command")
         .then((stocks) => {
-          let res = stocks.map((entry) => `${entry.companyName} | +${entry.percentageChange} | ${entry.optionable ? "OPTIONS AVAILABLE" : "NO OPTIONS"}`).join("\n");
+          let res = stocks.map((entry) => `${entry.ticker} | +${entry.dayGain}% | ${entry.optionable === "Yes" ? "🟢" : "🔴"}`).join("\n");
           msg.reply(`**Today's Gainers** \n` + res);
         })
         .catch((error) => {
@@ -80,11 +78,11 @@ app.listen(port, () => {
         });
     }
 
-    if (msg.content === "!3day") {
-      checkStocks3day("command")
+    if (msg.content === "!week") {
+      checkStocksWeek("command")
         .then((stocks) => {
-          let res = stocks.map((entry) => `${entry.companyName} | +${entry.percentageChange} | ${entry.optionable ? "OPTIONS AVAILABLE" : "NO OPTIONS"}`).join("\n");
-          msg.reply(`**3 Day Gainers** \n` + res);
+          let res = stocks.map((entry) => `${entry.ticker} | +${entry.weekGain}% | ${entry.optionable === "Yes" ? "🟢" : "🔴"}`).join("\n");
+          msg.reply(`**Week's Gainers** \n` + res);
         })
         .catch((error) => {
           console.error("Error:", error);
@@ -95,111 +93,83 @@ app.listen(port, () => {
   client.login(process.env.TOKEN);
 });
 
-const checkedCompanies1 = new Map();
-const checkedCompanies2 = new Map();
+let checkedCompanies1 = new Map()
+let checkedCompanies2 = new Map()
 
-async function checkStocks(mode) {
+async function checkStocksDay(mode) {
   try {
     const response = await axios.get(url1);
     const html = response.data;
     const $ = cheerio.load(html);
+    const parentRow = $("tr#screener-table");
+    let count = 0;
     const stocks = [];
-    const topGainers = [];
+    const alertable = []
 
-    $("table tr").each((index, element) => {
-      if (index <= 5) {
-        const columns = $(element).find("td");
-        if (columns.length >= 3) {
-          const companyName = $(columns[1]).text();
-          const percentageChange = $(columns[3])
-            .text()
-            .trim()
-            .match(/([0-9]*\.?[0-9]+%)/gm)[0];
+    parentRow.find("tr[valign='top']").each((index, element) => {
+      if (count < 5) {
+        const childRow = $(element);
+        const ticker = childRow.find("td:nth-child(2)").text();
+        const optionable = childRow.find("td:nth-child(4)").text();
+        const dayGain = parseFloat(childRow.find("td:nth-child(5)").text().match(/([0-9]*\.?[0-9]+)/gm));
 
-          stocks.push({ companyName, percentageChange });
+        count++
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 90 && !checkedCompanies1.has(companyName)) {
-            checkedCompanies1.set(companyName, true);
-            topGainers.push({ companyName, percentageChange });
-          }
+        stocks.push({ ticker, dayGain, optionable })
+
+        if (parseFloat(dayGain) >= 90 && !checkedCompanies1.has(ticker) && optionable === "Yes") {
+          checkedCompanies1.set(ticker, true);
+          alertable.push({ ticker, dayGain, optionable });
         }
       }
     });
 
     if (mode === "command") {
-      const res = await Promise.all(stocks.map((entry) => checkOptions(entry.companyName)));
-
-      for (let i = 0; i < 5; i++) {
-        stocks[i]["optionable"] = res[i];
-      }
-
-      return stocks;
+      return stocks
     }
 
-    const results = await Promise.all(topGainers.map((entry) => checkOptions(entry.companyName)));
-    const finalTopGainers = topGainers.filter((_, index) => results[index]);
-
-    return finalTopGainers;
+    return alertable
   } catch (error) {
     console.error("Error fetching data:", error);
     return [];
   }
 }
 
-async function checkStocks3day(mode) {
+async function checkStocksWeek(mode) {
   try {
     const response = await axios.get(url2);
     const html = response.data;
     const $ = cheerio.load(html);
+    const parentRow = $("tr#screener-table");
+    let count = 0;
     const stocks = [];
-    const topGainers = [];
+    const alertable = []
 
-    $("table tr").each((index, element) => {
-      if (index <= 5) {
-        const columns = $(element).find("td");
-        if (columns.length >= 3) {
-          const dataClean = $(columns[0]).attr("data-clean");
-          const percentageChange = $(columns[1])
-            .text()
-            .match(/([0-9]*\.?[0-9]+%)/gm)[0];
-          const [companyName, name] = dataClean.split("|");
+    parentRow.find("tr[valign='top']").each((index, element) => {
+      if (count < 5) {
+        const childRow = $(element);
+        const ticker = childRow.find("td:nth-child(2)").text();
+        const weekGain = parseFloat(childRow.find("td:nth-child(3)").text().match(/([0-9]*\.?[0-9]+)/gm));
+        const optionable = childRow.find("td:nth-child(4)").text();
 
-          stocks.push({ companyName, percentageChange });
+        count++;
 
-          if (percentageChange !== "N/A" && parseFloat(percentageChange) > 150 && !checkedCompanies2.has(companyName)) {
-            checkedCompanies2.set(companyName, true);
-            topGainers.push({ companyName, percentageChange });
-          }
+        stocks.push({ ticker, weekGain, optionable })
+
+        if (parseFloat(weekGain) >= 130 && !checkedCompanies2.has(ticker) && optionable === "Yes") {
+          checkedCompanies2.set(ticker, true);
+          alertable.push({ ticker, weekGain, optionable });
         }
       }
     });
 
     if (mode === "command") {
-      const res = await Promise.all(stocks.map((entry) => checkOptions(entry.companyName)));
-
-      for (let i = 0; i < 5; i++) {
-        stocks[i]["optionable"] = res[i];
-      }
-
-      return stocks;
+      return stocks
     }
 
-    const results = await Promise.all(topGainers.map((entry) => checkOptions(entry.companyName)));
-    const finalTopGainers = topGainers.filter((_, index) => results[index]);
-
-    return finalTopGainers;
+    return alertable
   } catch (error) {
     console.error("Error fetching data:", error);
     return [];
-  }
-}
-
-async function checkOptions(ticker) {
-  try {
-    const result = await yahooFinance.options(ticker, queryOptions);
-    return result.options.length !== 0;
-  } catch (error) {
-    console.error("Error fetching options:", error);
-    throw error;
   }
 }
