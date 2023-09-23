@@ -11,6 +11,7 @@ const port = 3000;
 const https = require("https");
 const serverUrl = "https://gainer.onrender.com";
 
+
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 
@@ -98,7 +99,15 @@ let checkedCompanies2 = new Map()
 
 async function checkStocksDay(mode) {
   try {
-    const response = await axios.get(url1);
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36';
+
+    const config = {
+      headers: {
+        'User-Agent': userAgent,
+      },
+    };
+
+    const response = await axios.get(url1, config);
     const html = response.data;
     const $ = cheerio.load(html);
     const parentRow = $("tr#screener-table");
@@ -137,7 +146,15 @@ async function checkStocksDay(mode) {
 
 async function checkStocksWeek(mode) {
   try {
-    const response = await axios.get(url2);
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36';
+
+    const config = {
+      headers: {
+        'User-Agent': userAgent,
+      },
+    };
+
+    const response = await axios.get(url2, config);
     const html = response.data;
     const $ = cheerio.load(html);
     const parentRow = $("tr#screener-table");
